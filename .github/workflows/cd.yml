@@ -1,0 +1,54 @@
+name: CD - deploy staging & prod
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'staging or production'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      COINMARKETCAP_API_KEY: ${{ secrets.COINMARKETCAP_API_KEY }}
+      ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
+      INFURA_API_KEY: ${{ secrets.INFURA_API_KEY }}
+      BINANCE_API_KEY: ${{ secrets.BINANCE_API_KEY }}
+      BYBIT_API_KEY: ${{ secrets.BYBIT_API_KEY }}
+      COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
+      BITQUERY_API_KEY: ${{ secrets.BITQUERY_API_KEY }}
+      CRYPTOCOMPARE_API_KEY: ${{ secrets.CRYPTOCOMPARE_API_KEY }}
+      TOKEN_METRICS_API_KEY: ${{ secrets.TOKEN_METRICS_API_KEY }}
+      LUNARCRUSH_API_KEY: ${{ secrets.LUNARCRUSH_API_KEY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run smoke tests
+        run: pytest tests/smoke.py -q
+
+      - name: Deploy to staging/prod
+        run: |
+          echo "Deploying to ${{ github.event.inputs.environment || 'staging' }}"
+          # 👉 Ajoute ici tes commandes de déploiement :
+          # docker build -t myrepo/crypto-monitor:${{ github.sha }} .
+          # docker push myrepo/crypto-monitor:${{ github.sha }}
+          # ssh deploy@server 'docker pull myrepo/crypto-monitor:${{ github.sha }} && docker-compose up -d'
